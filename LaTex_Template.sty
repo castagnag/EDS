@@ -1,0 +1,374 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  EncyArticle.sty  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% This is the EncyArticle.sty file, a list of macros and definitions that 
+% are for the Encyclopedia Article for Springer.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pretolerance=800 
+\tolerance=10000 
+\sloppy 
+ 
+%\voffset=-.5in 
+%\hoffset=-.5in 
+\vsize=55pc 
+\hsize=41pc 
+\baselineskip=14pt 
+\footskip=18pt 
+\topmargin -24pt  
+\headheight 12pt  
+\headsep 17pt  
+\textheight 52.5pc  \advance\textheight by \topskip 
+\textwidth 41pc  
+\parskip 0pt
+\parindent 18pt
+
+\setlength{\oddsidemargin}{-0.875pc} 
+\setlength{\evensidemargin}{-0.875pc}
+
+\font\tensmc=cmcsc10
+\def\smc{\tensmc}
+
+%%%took from siam ltexpprt.sty
+%%%title
+%%%change maketitle to eliminate drop folio
+\if@titlepage
+  \renewcommand\maketitle{\begin{titlepage}%
+  \let\footnotesize\small
+  \let\footnoterule\relax
+  \let \footnote \thanks
+  \null\vfil
+  \vskip 60\p@
+  \begin{center}%
+    {\LARGE \@title \par}%
+    \vskip 3em%
+    {\large
+     \lineskip .75em%
+      \begin{tabular}[t]{c}%
+        \@author
+      \end{tabular}\par}%
+      \vskip 1.5em%
+    {\large \@date \par}%       % Set date in \large size.
+  \end{center}\par
+  \@thanks
+  \vfil\null
+  \end{titlepage}%
+  \setcounter{footnote}{0}%
+  \global\let\thanks\relax
+  \global\let\maketitle\relax
+  \global\let\@thanks\@empty
+  \global\let\@author\@empty
+  \global\let\@date\@empty
+  \global\let\@title\@empty
+  \global\let\title\relax
+  \global\let\author\relax
+  \global\let\date\relax
+  \global\let\and\relax
+}
+\else
+\renewcommand\maketitle{\par
+  \begingroup
+    \renewcommand\thefootnote{\@fnsymbol\c@footnote}%
+    \def\@makefnmark{\rlap{\@textsuperscript{\normalfont\@thefnmark}}}%
+    \long\def\@makefntext##1{\parindent 1em\noindent
+            \hb@xt@1.8em{%
+                \hss\@textsuperscript{\normalfont\@thefnmark}}##1}%
+    \if@twocolumn
+      \ifnum \col@number=\@ne
+        \@maketitle
+      \else
+        \twocolumn[\@maketitle]%
+      \fi
+    \else
+      \newpage
+      \global\@topnum\z@   % Prevents figures from going at top of page.
+      \@maketitle
+    \fi
+    \thispagestyle{empty}\@thanks
+  \endgroup
+  \setcounter{footnote}{0}%
+  \global\let\thanks\relax
+  \global\let\maketitle\relax
+  \global\let\@maketitle\relax
+  \global\let\@thanks\@empty
+  \global\let\@author\@empty
+  \global\let\@date\@empty
+  \global\let\@title\@empty
+  \global\let\title\relax
+  \global\let\author\relax
+  \global\let\date\relax
+  \global\let\and\relax
+}
+\def\@maketitle{%
+  \newpage
+  \null
+  \vskip 2em%
+  \begin{center}%
+  \let \footnote \thanks
+    {\LARGE \@title \par}%
+    \vskip 1.5em%
+    {\large
+      \lineskip .5em%
+      \begin{tabular}[t]{c}%
+        \@author
+      \end{tabular}\par}%
+    \vskip 1em%
+    {\large \@date}%
+  \end{center}%
+  \par
+  \vskip 1.5em}
+\fi
+
+%various sections
+\renewcommand{\section}{\@startsection{section}{2}{0mm}{5mm}{1pt}%
+  {\sffamily\bfseries\large}}%
+\renewcommand{\subsection}{\@startsection{subsection}{3}{0mm}{5mm}{1pt}%
+  {\sffamily\bfseries\large}}%
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{4}{0mm}{3mm}{1pt}%
+  {\sffamily\bfseries\normalsize}\noindent}%
+\renewcommand{\paragraph}{\@startsection{paragraph}{5}{0mm}{-5mm}{-1em}%
+  {\bfseries\normalsize\sffamily}}%
+\renewcommand{\subparagraph}{\@startsection{subparagraph}{6}{0mm}{-5mm}{-1em}%
+  {\bfseries\normalsize\sffamily}}%
+% 
+% synonyms
+\newenvironment{synonyms}%
+  {\begin{list}
+    {}
+    {\setlength{\leftmargin}{15mm}%
+     \setlength{\rightmargin}{0pt}%
+     \setlength{\labelwidth}{0mm}%
+     \setlength{\labelsep}{0mm}%
+     \setlength{\itemindent}{0mm}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\topsep}{0pt}%
+     \setlength{\partopsep}{0pt}%
+     \def\syn@sep{\gdef\syn@sep{\unskip;\ }\relax}%
+     \newcommand{\synonym}[1]{\syn@sep ##1}%
+     \noindent{\textbf{SYNONYMS}}%
+      \item}%
+    }%
+    {\end{list}}
+    
+%definition
+\newenvironment{definition}%
+  {\begin{list}
+    {}
+    {\setlength{\leftmargin}{0mm}%
+     \setlength{\rightmargin}{0pt}%
+     \setlength{\labelwidth}{0mm}%
+     \setlength{\labelsep}{0mm}%
+     \setlength{\itemindent}{0mm}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\topsep}{0pt}%
+     \setlength{\partopsep}{0pt}%
+     \noindent{\textbf{DEFINITION}}%
+      \item}%
+    }%
+    {\end{list}}
+
+%historical background
+\newenvironment{historicalBG}%
+  {\begin{list}
+    {}
+    {\setlength{\leftmargin}{0mm}%
+     \setlength{\rightmargin}{0pt}%
+     \setlength{\labelwidth}{0mm}%
+     \setlength{\labelsep}{0mm}%
+     \setlength{\itemindent}{0mm}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\topsep}{0pt}%
+     \setlength{\partopsep}{0pt}%
+     \noindent{\textbf{HISTORICAL BACKGROUND}}%
+      \item}%
+    }%
+    {\end{list}}
+    
+%scientific fundamentals
+\newenvironment{scientific}%
+  {\begin{list}
+    {}
+    {\setlength{\leftmargin}{0mm}%
+     \setlength{\rightmargin}{0pt}%
+     \setlength{\labelwidth}{0mm}%
+     \setlength{\labelsep}{0mm}%
+     \setlength{\itemindent}{0mm}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\topsep}{0pt}%
+     \setlength{\partopsep}{0pt}%
+     \noindent{\textbf{SCIENTIFIC FUNDAMENTALS}}%
+      \item}%
+    }%
+    {\end{list}}
+
+%key applications
+\newenvironment{keyApp}%
+  {\begin{list}
+    {}
+    {\setlength{\leftmargin}{0mm}%
+     \setlength{\rightmargin}{0pt}%
+     \setlength{\labelwidth}{0mm}%
+     \setlength{\labelsep}{0mm}%
+     \setlength{\itemindent}{0mm}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\topsep}{0pt}%
+     \setlength{\partopsep}{0pt}%
+     \noindent{\textbf{KEY APPLICATIONS}}%
+      \item}%
+    }%
+    {\end{list}}
+
+%Future Discussions
+\newenvironment{future}%
+  {\begin{list}
+    {}
+    {\setlength{\leftmargin}{0mm}%
+     \setlength{\rightmargin}{0pt}%
+     \setlength{\labelwidth}{0mm}%
+     \setlength{\labelsep}{0mm}%
+     \setlength{\itemindent}{0mm}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\topsep}{0pt}%
+     \setlength{\partopsep}{0pt}%
+     \noindent{\textbf{FUTURE DIRECTIONS}}%
+      \item}%
+    }%
+    {\end{list}}
+    
+%experimental results
+\newenvironment{experimental}%
+  {\begin{list}
+    {}
+    {\setlength{\leftmargin}{0mm}%
+     \setlength{\rightmargin}{0pt}%
+     \setlength{\labelwidth}{0mm}%
+     \setlength{\labelsep}{0mm}%
+     \setlength{\itemindent}{0mm}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\topsep}{0pt}%
+     \setlength{\partopsep}{0pt}%
+     \noindent{\textbf{EXPERIMENTAL RESULTS}}%
+      \item}%
+    }%
+    {\end{list}}
+
+
+%data sets
+\newenvironment{datasets}%
+  {\begin{list}
+    {}
+    {\setlength{\leftmargin}{0mm}%
+     \setlength{\rightmargin}{0pt}%
+     \setlength{\labelwidth}{0mm}%
+     \setlength{\labelsep}{0mm}%
+     \setlength{\itemindent}{0mm}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\topsep}{0pt}%
+     \setlength{\partopsep}{0pt}%
+     \noindent{\textbf{DATA SETS}}%
+      \item}%
+    }%
+    {\end{list}}
+
+%URL to Code
+\newenvironment{URL}%
+  {\begin{list}
+    {}
+    {\setlength{\leftmargin}{0mm}%
+     \setlength{\rightmargin}{0pt}%
+     \setlength{\labelwidth}{0mm}%
+     \setlength{\labelsep}{0mm}%
+     \setlength{\itemindent}{0mm}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\topsep}{0pt}%
+     \setlength{\partopsep}{0pt}%
+     \noindent{\textbf{URL TO CODE}}%
+      \item}%
+    }%
+    {\end{list}}
+
+%cross reference
+\newenvironment{crossreference}%
+  {\begin{list}
+    {}
+    {\setlength{\leftmargin}{0mm}%
+     \setlength{\rightmargin}{0pt}%
+     \setlength{\labelwidth}{0mm}%
+     \setlength{\labelsep}{0mm}%
+     \setlength{\itemindent}{0mm}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\topsep}{0pt}%
+     \setlength{\partopsep}{0pt}%
+     \noindent{\textbf{CROSS REFERENCE}}%
+      \item}%
+    }%
+    {\end{list}}
+
+%Main Text, for definitions
+\newenvironment{maintext}%
+  {\begin{list}
+    {}
+    {\setlength{\leftmargin}{0mm}%
+     \setlength{\rightmargin}{0pt}%
+     \setlength{\labelwidth}{0mm}%
+     \setlength{\labelsep}{0mm}%
+     \setlength{\itemindent}{0mm}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\topsep}{0pt}%
+     \setlength{\partopsep}{0pt}%
+     \noindent{\textbf{MAIN TEXT}}%
+      \item}%
+    }%
+    {\end{list}}
+
+%reference
+\newenvironment{reference}%
+  {\begin{list}
+    {}
+    {\setlength{\leftmargin}{0mm}%
+     \setlength{\rightmargin}{0pt}%
+     \setlength{\labelwidth}{0mm}%
+     \setlength{\labelsep}{0mm}%
+     \setlength{\itemindent}{0mm}%
+     \setlength{\itemsep}{0pt}%
+     \setlength{\parsep}{0pt}%
+     \setlength{\topsep}{0pt}%
+     \setlength{\partopsep}{0pt}%
+     \noindent{\textbf{REFERENCES}}%
+      \item}%
+    }%
+    {\end{list}}
+    
+%bibliograph, took from siam ltexpprt.sty
+\def\thebibliography#1{% 
+%\cleardoublepage 
+\parindent 0em
+\vspace{6pt}
+\begin{flushleft}\normalsize{\bf RECOMMENDED READING} 
+\\
+Between 3 and 15 citations to important literature, e.g., in journals, conference proceedings, and websites. 
+\end{flushleft}
+\addvspace{3pt}\nopagebreak\list 
+ %% default is no labels, for those not using \cite or BibTeX 
+% {[\arabic{enumi}]} {\settowidth\labelwidth{[#1]} 
+{[\arabic{enumi}]}{\settowidth\labelwidth{mm} 
+\leftmargin\labelwidth 
+ \advance\leftmargin\labelsep 
+ \usecounter{enumi}\@bibsetup} 
+\def\newblock{\hskip .11em plus .33em minus -.07em} 
+ \sloppy\clubpenalty4000\widowpenalty4000 
+ \sfcode`\.=1000\relax} 
+ 
+\def\@bibsetup{\itemindent=0pt \itemsep=0pt \parsep=0pt
+\small} 
+

@@ -1,0 +1,413 @@
+%--------------------------------------------------------------------
+% $Id: xmltc.tex,v 1.26 2008-01-29 12:41:42 stijn Exp $
+%--------------------------------------------------------------------
+\documentclass[twoside,leqno,onecolumn,pdftex]{article}  
+\usepackage{LaTex_Template}
+\usepackage{url}
+\usepackage{xspace}
+
+\newcommand{\error}{\textsf{error}\xspace}
+\newcommand{\REMARK}[1]{$\diamond$\textbf{#1}$\diamond$}
+%\newcommand{\REMARK}[1]{}
+
+\begin{document}
+\title{XML TYPECHECKING}
+\author{     V\'eronique Benzaken  \\
+         Universit\'e Paris 11\\
+         \url{http://www.lri.fr/~benzaken}
+         \\[2ex]
+         Giuseppe Castagna \\
+         C.N.R.S. and Universit\'e Paris 7\\
+         \url{http://www.pps.jussieu.fr/~gc}
+         \\[2ex]
+         Haruo Hosoya \\
+         The University of Tokyo \\
+         \url{http://arbre.is.s.u-tokyo.ac.jp/~hahosoya}
+         \\[2ex]
+         Benjamin C. Pierce\\
+         University of Pennsylvania \\
+         \url{http://www.cis.upenn.edu/~bcpierce}
+         \\[2ex]
+         Stijn Vansummeren \\
+         Hasselt University and transnational University of Limburg\\
+         \url{http://alpha.uhasselt.be/~lucg5855/}
+}
+\date{}
+\maketitle
+
+\noindent
+\begin{synonyms}
+  None
+\end{synonyms}
+~\\\\
+
+\begin{definition}
+
+  In general, \emph{typechecking} refers to the problem where, given a
+  program $P$, an input type $\sigma$, and an output type $\tau$, one
+  must decide whether $P$ is \emph{type-safe}, that is, whether it
+  produces only outputs of type $\tau$ when run on inputs of type
+  $\sigma$.  In the XML context, typechecking problems mainly arise in
+  two forms:
+  \begin{itemize}
+  \item 
+  \item \emph{XML-to-XML transformations,} where $P$ transforms
+    XML documents conforming to a given type  into XML documents
+    conforming to another given type; and
+  \item \emph{XML publishing,} where $P$ transforms relational
+    databases into XML views of these databases and it is necessary to
+    check that all generated views conform to a specified type.
+  \end{itemize}
+  A \emph{type} for XML documents is typically a regular tree
+  language, usually expressed as a schema written in a schema language
+  such as DTD, XML Schema, or a Relax NG (see \underline{XML Types}).
+  In the XML publishing case, the input type $\sigma$ is a
+  \underline{relational database schema}, possibly with
+  \underline{integrity constraints}.  
+
+  Typechecking problems may or may not be decidable, depending on (1) the
+  class of programs considered, (2) the class of input types (relational
+  schemas, DTDs, XML Schemas, Relax NG schema, or perhaps other subclasses
+  of the regular tree languages), and (3) the class of output types.  In
+  cases where it is decidable, typechecking can be done \emph{exactly}. In
+  cases where it is undecidable, one must revert to \emph{approximate} or
+  \emph{incomplete} typecheckers that may return false negatives---i.e., may
+  reject a program even if it is type-safe. Even when exact typechecking is
+  possible, approximate typechecking may be preferable as this is often
+  computationally cheaper than exact typechecking.
+  
+  In the programming languages literature, typechecking often not only
+  entails verifying that all outputs are of type $\tau$, but also
+  requires detecting when the program may abort with a run-time error
+  on inputs of type $\sigma$~\cite{pierce:types-proglang}.  The above
+  definition encompasses such cases: view run-time errors as a special
+  result value $\error$ and then typecheck a program against an output
+  type that does not contain the value $\error$.
+\end{definition}
+~\\\\
+
+\begin{historicalBG}
+  Although typechecking is a fundamental and well-studied problem in
+  the theory of programming languages~\cite{pierce:types-proglang},
+  the types necessary for XML typechecking (based on regular tree
+  languages) differ significantly from the conventional data types
+  usually considered (i.e., lists, records, classes, and so on).
+  Indeed, although it is possible to encode XML types into
+  conventional datatypes, this encoding lacks flexibility in the sense
+  that programs tend to need artificial changes when types
+  evolve~\cite{HVPRegtypeToplas}. For this reason, Hosoya et
+  al.~\cite{HVPRegtypeToplas} proposed regular tree languages as the
+  ``right'' notion of types for XML and presented an approximate
+  typechecker in this context. The typechecker was implemented in the
+  XML-to-XML transformation language XDuce~\cite{HosoyaPierceTOIT03}
+  whose approach was later extended to general purpose programming by
+  CDuce (functional programming) and Xtatic (object-oriented
+  programming). XDuce's approach also lies at the basis of XQuery's
+  typechecking algorithm~\cite{XQuery}.
+
+  The contemporary study of exact typechecking for XML-to-XML
+  transformations started with an investigation of relatively simple
+  transformation
+  languages~\cite{Milo:PODS99,Murata97,PapakonstantinouVianu00}.
+  Ironically enough, the fundamentals of exact typechecking for more
+  advanced transformation languages were already investigated a long
+  time before XML appeared~\cite{Engelfriet77,Engelfriet85}.  These
+  fundamentals were revived in the XML era by Milo, Suciu, and Vianu
+  in their seminal work on $k$-pebble tree
+  transducers~\cite{DBLP:journals/jcss/MiloSV03}, which was later
+  extended to other transformation
+  languages~\cite{Tozawa01,Maneth05,Tozawa06}.  The computational
+  complexity of exact typechecking was investigated in
+  \cite{DBLP:journals/jcss/MartensN07,Maneth07,FrischHosoya07}. Exact
+  typechecking algorithms for XML publishing scenarios were given by
+  Alon et al.~\cite{DBLP:journals/tocl/AlonMNSV03}.
+
+\end{historicalBG}
+~\\\\
+\begin{scientific}
+
+\subsection*{Exact Typechecking}
+
+
+\paragraph*{XML-to-XML Transformations.}
+\label{sec:xml-transformations}
+
+Recall that in this setting, $P$ is a program that should transform
+XML documents of a type $\sigma$ into documents of a type $\tau$.
+When the languages in which the transformation and the types are
+expressed are sufficiently restricted in power, exact typechecking is
+possible.  There are two major approaches to the construction of an
+exact typechecking algorithm: {\em forward inference} and {\em
+  backward inference}.  Forward inference solves the typechecking
+problem directly by first computing the image $O$ of the input type
+$\sigma$ under the transformation $P$, i.e., $O := \{ P(t) \mid t \in
+\sigma \}$, and then checking $O \subseteq
+\tau$~\cite{DBLP:journals/jcss/MiloSV03,Murata97,PapakonstantinouVianu00,DBLP:journals/jcss/MartensN07,DBLP:journals/sigmod/Suciu02}.
+This approach does not work if $O$ goes beyond \emph{context-free tree
+  languages} as checking $O \subseteq \tau$ then becomes undecidable.
+Sadly, this is already the case when $P$ is written in very simple
+transformation languages, such as the \emph{top-down tree transducers}
+(this fact is known as folklore; see, e.g.,~\cite{FrischHosoya07}.)
+Also, computing $O$ itself becomes undecidable for more advanced
+transformation languages.
+
+Backward inference, on the other hand, first computes the pre-image
+$I$ of the output type $\tau$ under $P$, i.e., $I := \{ t \mid P(t)\in
+\tau \}$, and then checks $\sigma \subseteq I$.  Backward inference
+often works even when the transformation language is too expressive
+for forward inference. The technique has successfully been applied to
+a range of formal models of real-world transformation languages like
+XSLT, from the top-down and bottom-up tree transducers
+\cite{Engelfriet77}, to macro tree transducers
+\cite{Engelfriet85,Maneth07,FrischHosoya07}, macro forest transducers
+\cite{Perst04}, $k$-pebble tree transducers
+\cite{DBLP:journals/jcss/MiloSV03}, tree transducers based on
+alternating tree automata~\cite{Tozawa01}, tree transducers dealing
+with atomic data values~\cite{DBLP:journals/sigmod/Suciu02}, and high-level tree
+transducers~\cite{Tozawa06}.
+
+As mentioned in the definition, static detection of run-time errors
+can be phrased as a particular form of typechecking by introducing a
+special output value $\error$. Exact typechecking in this form has
+been investigated for XQuery programs written in the non-recursive
+for-let-where return fragment of XQuery without automatic coercions
+but with the various XPath axes; node constructors; value and node
+comparisons; and node label and content inspections, in the setting
+where the input type $\sigma$ is given by a recursion-free regular
+tree language. The crux of decidability here is a small-model
+property: if $P(t) = \error$ for some $t$ of type $\sigma$ then there
+exists another input $t'$ of type $\sigma$ whose size depends only on
+$P$ and $\sigma$ such that $P(t') = \error$. It then suffices to
+enumerate all inputs $t' \in \sigma$ up to the maximum size and check
+$P(t') = \error$.  There are only a finite number of such $t'$ (up to
+isomorphism, and $P$ cannot distinguish between isomorphic inputs),
+from which decidability follows~\cite{vansummeren:welldef-trees}. This
+small model property continues to hold when we extend the above XQuery
+fragment with arbitrary primitives satisfying some general niceness
+properties; see Vansummeren~\cite{vansummeren:welldef-trees}.
+
+\paragraph*{XML Publishing.}
+\label{sec:xml-publishing}
+
+In this setting, the input to the program $P$ is a relational database
+$D$. Suppose that $P$ computes its output XML tree by posing simple
+select-project-join queries to $D$, nesting the results to these
+queries, and constructing new XML elements.  Exact typechecking for
+programs of this form, when the input type $\sigma$ is a relational
+database schema with key and foreign key constraints, and the output
+type $\tau$ is a ``star-free'' DTD, is
+decidable~\cite{DBLP:journals/tocl/AlonMNSV03}. (See
+\cite{DBLP:journals/tocl/AlonMNSV03} for a precise definition and
+examples of the concept ``star-free''.) As was the case for detecting
+runtime errors in XQuery programs, the crux of decidability here is
+again a small model property.  Typechecking remains decidable for
+output DTDs $\tau$ that are not star-free, but then the queries in $P$
+must not use projection.  Typechecking unfortunately becomes
+undecidable when the output types $\tau$ are given by XML Schemas or
+Relax NG Schemas~\cite{DBLP:journals/tocl/AlonMNSV03}.  Typechecking
+also becomes undecidable when $P$ uses queries more expressive than
+select-project-join queries.
+
+\subsection*{Approximate Typechecking}
+
+The expressive power that realistic applications
+require of practical transformation languages is often too high to
+allow for exact typechecking. In such cases, one must revert to
+approximate or incomplete typecheckers that guarantee that all
+succesfully checked programs are type-safe, but that may also reject
+some type-safe programs. Existing techniques can be grouped into two
+categories: type systems and flow analyses.
+
+\paragraph{Type systems}
+
+Many conventional programming languages (such as C and Java) specify
+what programs to accept by a {\em type
+  system}~\cite{pierce:types-proglang}.  Typically, such a system
+consists of a set of {\em typing rules} that determine the type of
+each subexpression of a program.  Often, in order to help the typechecker,
+the programmer is required to supply {\em type
+  annotations} on variable declarations and in other specified places.
+
+The pioneer work applying this approach to the XML setting was the
+XDuce (``transduce'') language \cite{HosoyaPierceTOIT03},
+whose type system is based on regular tree languages.  One significant point
+in this work is its definition of a natural notion of {\em subtyping}
+as the inclusion relation between regular tree languages and
+its demonstration of the usefulness of allowing a value of one
+type to be viewed as another type with a syntaticaly completely
+different structure \cite{HVPRegtypeToplas}.  In addition, although
+the decision problem for subtyping is known to be EXPTIME-complete,
+the ``top-down algorithm'' used in the XDuce implementation is
+empirically shown to be efficient
+in most cases that actually arise in typechecking
+\cite{HVPRegtypeToplas,SudaHosoya05,jacm08}.  Such a type system
+also needs machinery to reduce the amount of type annotations that
+otherwise tends to be a burden to the user, in particular when the
+language supports a non-trivial mechanism to manipulate XML documents
+such as regular expression patterns \cite{HosoyaPierceRegpatJFP} or
+filter expressions \cite{HosoyaFiltersJFP}.  A series of works
+address this problem by proposing automatic type inference schemes
+that have certain precision properties in a sense similar to the exact
+typechecking in the previous section
+\cite{HosoyaPierceRegpatJFP,HosoyaFiltersJFP,VouillonPLANX06}.  These
+ideas have further been extended for XML attributes
+\cite{HosoyaMurataTCS06} and parameteric polymorphism
+\cite{HosoyaFrischCastagna05POPL,VouillonPOPL06}.
+
+CDuce (pronounced ``seduce'') extends XDuce in various ways
+\cite{cduce2003}.  From a language point of view CDuce embraces
+XDuce's approach of a functional language based on regular expression
+patterns~\cite{HosoyaPierceRegpatJFP} and extends it with
+finer-grained pattern matching, complete two-way compatibility with
+programs and libraries in the OCaml programming language, Unicode, 
+queries, XML Schema validation,
+and, above all, higher-order and overloaded functions. XML types are
+enriched with general purpose data types, intersection and negation
+types, and functional types. Finally, the CDuce type inference algorithm
+for patterns is implemented by a new kind of tree automaton and proved
+to be optimal~\cite{Frisch04}. Among these extensions he addition of
+higher-order functions is significant.  Theoretically, this extension
+is not trivial first because functions do not fit well in the
+framework of finite tree automata, but more deeply because this
+entails a definitional cycle: the definition of
+typechecking uses subtyping, whose definition then uses the semantics
+of types (NB: subtyping is defined as inclusion between the sets
+denoted by given two types), whose definition in turn uses
+well-typedness of values; the last part depends on typechecking in the
+presence of higher-order functions since typechecking of a function
+abstraction $\lambda x.e$ requires analysis of its internal expression
+$e$.  Some solutions are known for breaking this circularity
+\cite{FrischLICS02,VouillonPOPL06}.  Also, an approach to combine one
+of these treatments with high-order functions has been proposed
+\cite{VouillonPOPL06}.
+
+Several research groups explore ways of mixing a XDuce-like type
+system with an existing popular language.  Xtatic
+\cite{XtaticExperience} carries out this program for the C\# language, developing
+techniques to blend regular expression types with an object-oriented
+type system.  XJ \cite{harren-raghavachari-shmueli-05} makes a closely
+related effort for Java.  OCamlDuce \cite{ocamlduce} mixes with OCaml,
+proposing a method to intermingle a standard ML type inference
+algorithm with XDuce-like typechecking.  XHaskell \cite{LuSulzmann04}
+is also another instance for Haskell; their approach is, however, to
+embed XML types into Haskell typing structures (such as tuples and
+disjoint sums) in the style of data-binding, yet support XDuce-like
+subtyping in its full flexibility by deploying a coercion technique
+\cite{Sulzmann06}.
+
+The formal semantics of XQuery defined by the W3C contains a type
+system based on a set of inductive typing rules \cite{XQuery}.  Their
+first draft was heavily based on XDuce's type system
+\cite{FernandezSimeonWadler01}.  Later, they switched to a different
+one that reflects the object-oriented hierarchical typing structure
+adopted by XML Schema.
+
+As byproducts of the above pieces of work, several optimization and
+compilation techniques that exploit typing information have been
+proposed \cite{Frisch04,LevinPierce05}.
+
+\paragraph{Flow-analysis}
+
+Flow analysis is a static analysis technique that has long been
+studied in the programming language community.  A series of
+investigations has been conducted for adapting flow analysis to
+approximate XML typechecking, concurrently to XDuce-related work,
+\cite{Bigwig,Kirkegaard06,Moeller2005}.  In this approach, the user
+needs to write no type annotations for intermediate values like in
+XDuce, but instead the static anlyzer completely infers them, thus
+providing a more user-friendly system.  One potential drawback is that
+the specification is rather informal and therefore, when the analyzer
+raises an error, the reason can sometimes be unclear; empirically,
+however, such false negatives are rare.
+
+Flow analysis is applied first to Bigwig language system, an extension
+of Java with an XML-manipulating facility called ``templates''
+\cite{Bigwig}.  Though this first attempt handles only XHTML types,
+they naturally generalize it to arbitrary XML types, calling the
+resulting system XAct \cite{Kirkegaard06}.  Their techniques are
+further extended and applied to static analysis of XSLT
+\cite{Moeller2005}.
+
+\end{scientific}
+~\\\\
+\begin{keyApp}
+  XML typechecking is a key component of XQuery, the standard XML
+  query language. As outlined above, XML typechecking in XQuery is
+  based on a set of inductive typing rules that reflects the
+  object-oriented hierarchical typing structure adopted by XML
+  Schema. Different approaches to XML typechecking may be found in
+  research prototypes like CDuce, OcamlDuce, XDuce,  XAct, XHaskell,
+  and Xtatic for which references may be found below.
+\end{keyApp}
+~\\\\
+% \begin{future}
+%         Optional. Open problems and discussions.
+% \end{future}
+% ~\\\\
+% \begin{experimental}
+%         Optional. PROBABLY NOT NEEDED?
+% \end{experimental}
+% ~\\\\
+% \begin{datasets}
+%         Optional.  PROBABLY NOT NEEDED?
+% \end{datasets}
+% ~\\\\
+\begin{URL}
+\begin{description}
+\item[CDuce: ] \url{http://www.cduce.org}
+\item[OCamlDuce: ] \url{http://www.cduce.org/ocaml.html}
+\item[XAct: ] \url{http://www.brics.dk/Xact/}
+\item[Xduce: ] \url{http://xduce.sourceforge.net}
+\item[XHaskell: ] \url{http://taichi.ddns.comp.nus.edu.sg/taichiwiki/XhaskellHomePage}
+\item[Xtatic: ] \url{http://www.cis.upenn.edu/~bcpierce/xtatic}
+\end{description}
+\end{URL}
+~\\\\
+\begin{crossreference}
+        XML Types,
+        Relational Database Schema,
+        Integrity Constraints
+\end{crossreference}
+~\\
+
+%bibliograph, took from siam ltexpprt.sty
+\def\thebibliography#1{% 
+%\cleardoublepage 
+\parindent 0em
+\vspace{6pt}
+\begin{flushleft}\normalsize{\bf RECOMMENDED READING} \\
+\suggestion
+\end{flushleft}
+\addvspace{3pt}\nopagebreak\list 
+ %% default is no labels, for those not using \cite or BibTeX 
+% {[\arabic{enumi}]} {\settowidth\labelwidth{[#1]} 
+{[\arabic{enumi}]}{\settowidth\labelwidth{mm} 
+\leftmargin\labelwidth 
+ \advance\leftmargin\labelsep 
+ \usecounter{enumi}\@bibsetup} 
+\def\newblock{\hskip .11em plus .33em minus -.07em} 
+ \sloppy\clubpenalty4000\widowpenalty4000 
+ \sfcode`\.=1000\relax} 
+ 
+\def\@bibsetup{\itemindent=0pt \itemsep=0pt \parsep=0pt
+\small} 
+
+
+\def\suggestion{ A gentle introduction to exact typechecking for both
+  XML-to-XML transformations and XML publishing can be found in
+  \cite{DBLP:journals/sigmod/Suciu02}. A non-technical presentation of
+  Regular Expression Types and Patterns and their use in query
+  languages can be found in the joint DBPL and XSym 2005 invited
+  talk~\cite{Cas05a}. For a more complete presentation of Regular
+  Expression Types and Patterns and the associated type-checking and
+  subtyping algorithms we recommend the reader to refer to the seminal
+  JFP article by Hosoya, Pierce, and Vouillon~\cite{HVPRegtypeToplas}.
+  The joint ICALP and PPDP 2005 keynote talk~\cite{CF05} constitutes a
+  relatively simple survey of the problem of type-checking
+  higher-order functions and an overview on how to derive subtyping
+  algorithms semantically: full technical details can be found in an extended version published in the JACM~\cite{jacm08}.  } \bibliographystyle{plain}
+\bibliography{biblio,hh/haruo.bib}
+
+
+\end{document}
+
